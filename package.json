@@ -1,0 +1,40 @@
+{
+  "name": "ai-screen-recorder",
+  "version": "0.1.0",
+  "description": "AI-powered tutorial video generator (CLI)",
+  "type": "module",
+  "private": true,
+  "bin": {
+    "ai-screen-recorder": "./dist/cli.js"
+  },
+  "scripts": {
+    "dev": "tsx src/cli.ts",
+    "build": "tsc",
+    "start": "node dist/cli.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "postinstall": "playwright install chromium"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "execa": "^9.5.0",
+    "openai": "^4.70.0",
+    "playwright": "^1.48.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^22.7.0",
+    "eslint": "^10.3.0",
+    "globals": "^17.6.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.59.2"
+  }
+}
