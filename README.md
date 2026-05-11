@@ -44,4 +44,13 @@ Single process, sequential pipeline:
 3. **record** — Verified steps are replayed with video recording enabled
 4. **compose** — ffmpeg merges audio and video into the final MP4
 
-See [docs/PRD.md](docs/PRD.md) for the full spec.
+
+## Agent Skills
+
+This project uses agent skills to enhance AI coding assistants with domain-specific knowledge. Installed skills: **debug**, **playwright**, **refactor**, **terminal-ui**, **think**, **typescript**, **zod**.
+
+The `.agents/` directory is gitignored — restore skills from `skills-lock.json` with:
+
+```bash
+npx skills experimental_install
+```

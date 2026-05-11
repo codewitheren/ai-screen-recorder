@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "skills": {
+    "debug": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/debug/SKILL.md",
+      "computedHash": "f59c8403a6fc2f547e2cdd57b2cf9c58d5e37f1d5dd7cdf7bf67e1784a8215db"
+    },
+    "playwright": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/playwright/SKILL.md",
+      "computedHash": "ca5bb4882a7e52762f36220a0e96262198e0c8d48bedaad21a289bab9301d1f9"
+    },
+    "refactor": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/refactor/SKILL.md",
+      "computedHash": "70694c431e9179707c4bc55ddf19efddd38472f8d5629194eb5fc17ee5b80b94"
+    },
+    "terminal-ui": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/terminal-ui/SKILL.md",
+      "computedHash": "f5c35268ccb3fd6dd50312bb0bc5dc6c19917ee83b88496d59ff5f2dd5271208"
+    },
+    "think": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/think/SKILL.md",
+      "computedHash": "ba382da8b4f00ae769903136bef9644a45295d590e1701fca07cf23c24093003"
+    },
+    "typescript": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/typescript/SKILL.md",
+      "computedHash": "3475c8e2a2e556833213dc2d4dff19e09ef166375a203b256b0d7f04f7d5d424"
+    },
+    "zod": {
+      "source": "pproenca/dot-skills",
+      "sourceType": "github",
+      "skillPath": "skills/.curated/zod/SKILL.md",
+      "computedHash": "e5d8e35002d0d6b03db0b0daad54e1b82c9c10804f8a745025c07db5ea685655"
+    }
+  }
+}
