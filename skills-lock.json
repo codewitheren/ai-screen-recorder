@@ -1,6 +1,18 @@
 {
   "version": 1,
   "skills": {
+    "code-comments": {
+      "source": "petekp/claude-code-setup",
+      "sourceType": "github",
+      "skillPath": "skills/code-comments/SKILL.md",
+      "computedHash": "f2119c255923c9e2673104e352b7be69ab54fde338b1364c3e2db4ac3fc037a3"
+    },
+    "create-readme": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "skillPath": "skills/create-readme/SKILL.md",
+      "computedHash": "d0ece1b2164ce1376e4ab6e98d6ac079df3a2a94f5f02224362b6a1ce2516ae9"
+    },
     "debug": {
       "source": "pproenca/dot-skills",
       "sourceType": "github",

@@ -1,9 +1,12 @@
-import chalk from 'chalk';
+import * as p from '@clack/prompts';
+import color from 'picocolors';
 import fs from 'node:fs/promises';
 import { explore } from './stages/explore.js';
 import { record } from './stages/record.js';
 import { tts } from './stages/tts.js';
 import { compose } from './stages/compose.js';
+import { mockExplore } from './testing/mock-explore.js';
+import { mockTts } from './testing/mock-tts.js';
 import type { AudioSegment, RunContext } from './types.js';
 
 /**
@@ -16,20 +19,30 @@ import type { AudioSegment, RunContext } from './types.js';
 export async function runPipeline(ctx: RunContext): Promise<string> {
   await fs.mkdir(ctx.outDir, { recursive: true });
 
-  process.stdout.write(chalk.gray('[explore] '));
-  const plan = await explore(ctx.prompt, ctx.url, ctx.outDir, ctx.language);
-  console.log(chalk.green(`✓ ${plan.steps.length} steps verified in browser`));
+  if (ctx.testMode) {
+    p.log.warn(color.yellow('Test mode — no AI credits will be used'));
+  }
 
-  process.stdout.write(chalk.gray('[tts]     '));
-  const clips = await tts(plan, ctx.voice, ctx.outDir);
+  const s = p.spinner();
+
+  s.start('Exploring website...');
+  const plan = ctx.testMode
+    ? await mockExplore(ctx.prompt, ctx.url, ctx.outDir)
+    : await explore(ctx.prompt, ctx.url, ctx.outDir, ctx.language);
+  s.stop(`Exploration complete — ${plan.steps.length} steps verified`);
+
+  s.start('Generating narration audio...');
+  const clips = ctx.testMode
+    ? await mockTts(plan, ctx.outDir)
+    : await tts(plan, ctx.voice, ctx.outDir);
   const audioDurations = new Map<number, number>(clips.map((c) => [c.stepId, c.durationMs]));
   const totalAudioSec = Math.round([...audioDurations.values()].reduce((a, b) => a + b, 0) / 1000);
-  console.log(chalk.green(`✓ ${clips.length} audio files (${totalAudioSec}s total)`));
+  s.stop(`Narration complete — ${clips.length} clips (${totalAudioSec}s)`);
 
-  process.stdout.write(chalk.gray('[record]  '));
+  s.start('Recording video...');
   const rec = await record(plan, ctx.url, ctx.outDir, audioDurations);
   const durationSec = Math.round((rec.timeline.at(-1)?.endMs ?? 0) / 1000);
-  console.log(chalk.green(`✓ recorded ${durationSec}s`));
+  s.stop(`Recording complete — ${durationSec}s video`);
 
   // Build a lookup map for O(1) timeline access instead of O(n) find per clip.
   const timelineByStep = new Map(rec.timeline.map((t) => [t.stepId, t]));
@@ -39,9 +52,9 @@ export async function runPipeline(ctx: RunContext): Promise<string> {
     return { ...c, startMs: entry.startMs };
   });
 
-  process.stdout.write(chalk.gray('[compose] '));
+  s.start('Composing final video...');
   const finalPath = await compose(rec.videoPath, audios, ctx.outDir);
-  console.log(chalk.green('✓ final.mp4'));
+  s.stop('Composition complete — final.mp4');
 
   return finalPath;
 }

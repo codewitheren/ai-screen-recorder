@@ -1,7 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { execa } from 'execa';
-import { getOpenAIClient } from '../openai-client.js';
+import { getOpenAIClient } from '../lib/openai-client.js';
 import type { AudioClip, ExploreResult } from '../types.js';
 
 const TTS_MODEL = process.env.TTS_MODEL ?? 'openai/gpt-4o-mini-tts-2025-12-15';

@@ -1,8 +1,8 @@
 import { chromium, type Page } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { chat, extractJson } from '../llm.js';
-import type { ChatMessage } from '../llm.js';
+import { chat, extractJson } from '../lib/llm.js';
+import type { ChatMessage } from '../lib/llm.js';
 import {
   AgentTurnSchema,
 } from '../types.js';

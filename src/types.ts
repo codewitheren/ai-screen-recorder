@@ -77,4 +77,5 @@ export interface RunContext {
   readonly voice: string;
   readonly language: string;
   readonly outDir: string;
+  readonly testMode?: boolean;
 }

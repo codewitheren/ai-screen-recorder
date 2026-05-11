@@ -39,7 +39,7 @@ export async function compose(
     finalPath,
   ];
 
-  await execa('ffmpeg', args, { stdio: 'inherit' });
+  await execa('ffmpeg', args, { stdio: 'pipe' });
   return finalPath;
 }
 
