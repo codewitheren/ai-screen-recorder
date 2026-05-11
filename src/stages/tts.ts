@@ -14,7 +14,7 @@ const MAX_RETRIES = 2;
 export async function tts(
   plan: ExploreResult,
   voice: string,
-  outDir: string,
+  outDir: string
 ): Promise<AudioClip[]> {
   const audioDir = path.join(outDir, 'audio');
   await fs.mkdir(audioDir, { recursive: true });
@@ -32,9 +32,12 @@ export async function tts(
 
 async function getAudioDurationMs(filePath: string): Promise<number> {
   const { stdout } = await execa('ffprobe', [
-    '-v', 'error',
-    '-show_entries', 'format=duration',
-    '-of', 'csv=p=0',
+    '-v',
+    'error',
+    '-show_entries',
+    'format=duration',
+    '-of',
+    'csv=p=0',
     filePath,
   ]);
   return Math.ceil(parseFloat(stdout.trim()) * 1000);

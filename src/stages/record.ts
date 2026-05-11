@@ -1,21 +1,27 @@
+// record.ts
+//
+// Replays verified steps in a fresh browser with Playwright video capture.
+// Each step is held on-screen long enough for its narration audio to finish.
+// No AI calls here — purely deterministic playback.
+
 import { chromium, type Page } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import type { ExploreResult, RecordResult, TimelineEntry, VerifiedStep } from '../types.js';
 
 const ACTION_TIMEOUT_MS = 8000;
+// Extra padding after each step so narration doesn't clip into the next action.
 const POST_STEP_GAP_MS = 400;
 
 /**
- * Replays the explore agent's verified steps in a fresh browser session with
- * video recording enabled. Each step is held on-screen until its narration
- * audio finishes. No LLM calls — selectors are already known to work.
+ * Replays steps with video recording. Returns the video path and a
+ * timeline mapping each step to its start/end offset in the recording.
  */
 export async function record(
   plan: ExploreResult,
   startUrl: string,
   outDir: string,
-  audioDurations: Map<number, number>,
+  audioDurations: Map<number, number>
 ): Promise<RecordResult> {
   const videoDir = path.join(outDir, 'video');
   await fs.mkdir(videoDir, { recursive: true });
@@ -35,7 +41,7 @@ export async function record(
       const startMs = Date.now() - t0;
       await runStep(page, step, startUrl);
 
-      // Hold the screen until the narration for this step has played out.
+      // Hold until narration finishes playing so audio stays in sync.
       const audioMs = audioDurations.get(step.id) ?? 0;
       const elapsed = Date.now() - t0 - startMs;
       const holdMs = Math.max(POST_STEP_GAP_MS, audioMs + POST_STEP_GAP_MS - elapsed);
@@ -44,7 +50,6 @@ export async function record(
       timeline.push({ stepId: step.id, startMs, endMs: Date.now() - t0 });
     }
   } finally {
-    // Closing the context flushes the WebM to disk.
     await context.close();
     await browser.close();
   }
@@ -58,8 +63,8 @@ export async function record(
   return { videoPath, timeline };
 }
 
-// Executes a single verified step. Selectors were validated during explore so
-// failures here indicate a page-state change between exploration and recording.
+// Executes a single verified step. If a selector fails here, it means
+// the page state drifted between exploration and recording.
 async function runStep(page: Page, step: VerifiedStep, fallbackUrl: string): Promise<void> {
   switch (step.action) {
     case 'navigate': {

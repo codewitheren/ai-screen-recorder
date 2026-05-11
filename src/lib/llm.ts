@@ -1,3 +1,9 @@
+// llm.ts
+//
+// Thin wrapper around the OpenAI chat completions API.
+// Handles system prompt injection and JSON extraction from
+// LLM responses that may contain markdown fences.
+
 import { getOpenAIClient } from './openai-client.js';
 
 const MODEL = process.env.LLM_MODEL ?? 'anthropic/claude-sonnet-4-5';
@@ -14,17 +20,14 @@ export interface ChatOptions {
 }
 
 /**
- * Sends a multi-turn conversation to the LLM and returns the response text.
- * The system prompt is prepended automatically; callers manage the history.
+ * Sends a multi-turn conversation to the LLM.
+ * System prompt is prepended; callers manage their own history.
  */
 export async function chat(opts: ChatOptions): Promise<string> {
   const res = await getOpenAIClient().chat.completions.create({
     model: MODEL,
     max_tokens: opts.maxTokens ?? 2048,
-    messages: [
-      { role: 'system' as const, content: opts.system },
-      ...opts.messages,
-    ],
+    messages: [{ role: 'system' as const, content: opts.system }, ...opts.messages],
   });
   const text = res.choices[0]?.message?.content;
   if (!text) throw new Error('LLM returned no text content');
@@ -32,8 +35,8 @@ export async function chat(opts: ChatOptions): Promise<string> {
 }
 
 /**
- * Extracts the first JSON object or array from a raw LLM response.
- * Strips markdown code fences if present.
+ * Extracts the first JSON object or array from an LLM response.
+ * Handles markdown code fences that models commonly emit.
  */
 export function extractJson(raw: string): string {
   const fenced = raw.match(/```(?:json)?\s*([\s\S]*?)```/);

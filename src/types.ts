@@ -1,3 +1,9 @@
+// types.ts
+//
+// Shared type definitions and Zod schemas for the pipeline.
+// All stage inputs/outputs are defined here to keep contracts explicit
+// and enable runtime validation of LLM responses.
+
 import { z } from 'zod';
 
 // --- Shared primitives ---
@@ -8,15 +14,15 @@ export type StepAction = z.infer<typeof StepActionSchema>;
 // --- Explore stage ---
 
 /**
- * A step verified by the explore agent: executed in a live browser, so the
- * selector (when present) is guaranteed to resolve on the target page.
+ * A verified browser step. The selector is guaranteed to resolve
+ * on the target page because it was tested during exploration.
  */
 export const VerifiedStepSchema = z.object({
   id: z.number().int().positive(),
   action: StepActionSchema,
-  selector: z.string().nullish(), // Playwright selector; required for click/type
-  input: z.string().nullish(),    // URL (navigate), text (type), or ms (wait)
-  narration: z.string().min(1),   // Voice-over line written at decision time
+  selector: z.string().nullish(),
+  input: z.string().nullish(),
+  narration: z.string().min(1),
 });
 export type VerifiedStep = z.infer<typeof VerifiedStepSchema>;
 
@@ -27,8 +33,8 @@ export const ExploreResultSchema = z.object({
 export type ExploreResult = z.infer<typeof ExploreResultSchema>;
 
 /**
- * The LLM's response for a single agent turn: reasoning, narration, and the
- * next browser action to execute.
+ * LLM response shape for a single agent turn.
+ * Validated at runtime because LLM output is untrusted.
  */
 export const AgentTurnSchema = z.object({
   thought: z.string().default(''),
@@ -47,7 +53,7 @@ export type AgentTurn = z.infer<typeof AgentTurnSchema>;
 
 export interface TimelineEntry {
   readonly stepId: number;
-  readonly startMs: number; // ms since recording started
+  readonly startMs: number;
   readonly endMs: number;
 }
 
@@ -64,7 +70,7 @@ export interface AudioClip {
   readonly audioPath: string;
 }
 
-// AudioSegment extends AudioClip with the video-aligned start time.
+// AudioSegment adds a video-aligned start time for ffmpeg composition.
 export interface AudioSegment extends AudioClip {
   readonly startMs: number;
 }

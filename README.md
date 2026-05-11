@@ -2,7 +2,7 @@
 
 # AI Screen Recorder
 
-*Generate tutorial videos from a single text prompt*
+_Generate tutorial videos from a single text prompt_
 
 [![Node.js](https://img.shields.io/badge/Node.js->=20-3c873a?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?style=flat-square)](https://www.typescriptlang.org)
@@ -41,12 +41,12 @@ The pipeline runs in four sequential stages:
 
 ## Prerequisites
 
-| Requirement | Purpose |
-|---|---|
-| [Node.js](https://nodejs.org) >= 20 | Runtime |
-| [pnpm](https://pnpm.io) | Package manager |
-| [ffmpeg](https://ffmpeg.org) + ffprobe | Video/audio processing |
-| [OpenRouter](https://openrouter.ai) API key | LLM and TTS access |
+| Requirement                                 | Purpose                |
+| ------------------------------------------- | ---------------------- |
+| [Node.js](https://nodejs.org) >= 20         | Runtime                |
+| [pnpm](https://pnpm.io)                     | Package manager        |
+| [ffmpeg](https://ffmpeg.org) + ffprobe      | Video/audio processing |
+| [OpenRouter](https://openrouter.ai) API key | LLM and TTS access     |
 
 > [!NOTE]
 > Chromium is installed automatically via Playwright during `postinstall`.
@@ -79,7 +79,7 @@ pnpm start
 
 The CLI will guide you through:
 
-1. **Task description** — What you want to demonstrate (e.g., *"Show how to create a new pen on CodePen"*)
+1. **Task description** — What you want to demonstrate (e.g., _"Show how to create a new pen on CodePen"_)
 2. **Target URL** — The website to record
 3. **Language** — Narration language
 4. **Voice** — TTS voice selection
@@ -129,7 +129,7 @@ $ pnpm dev
 │
 ◇  Done! ──────────────────────────────────────────────────╮
 │                                                          │
-│  ✔ Video: ./out/2026-05-11T22-14-04-262Z/final.mp4      │
+│  ✔ Video: ./out/2026-05-11T22-14-04-262Z/final.mp4       │
 │                                                          │
 │  To play:                                                │
 │    open "./out/2026-05-11T22-14-04-262Z/final.mp4"       │
@@ -143,21 +143,21 @@ $ pnpm dev
 
 Environment variables (set in `.env`):
 
-| Variable | Default | Description |
-|---|---|---|
-| `OPENROUTER_API_KEY` | — | **Required.** Your OpenRouter API key |
-| `LLM_MODEL` | `anthropic/claude-sonnet-4-5` | Model used for the exploration agent |
-| `TTS_MODEL` | `openai/gpt-4o-mini-tts-2025-12-15` | Model used for text-to-speech |
-| `TTS_VOICE` | `alloy` | Default voice preset |
-| `TTS_LANG` | `English` | Default narration language |
+| Variable             | Default                             | Description                           |
+| -------------------- | ----------------------------------- | ------------------------------------- |
+| `OPENROUTER_API_KEY` | —                                   | **Required.** Your OpenRouter API key |
+| `LLM_MODEL`          | `anthropic/claude-sonnet-4-5`       | Model used for the exploration agent  |
+| `TTS_MODEL`          | `openai/gpt-4o-mini-tts-2025-12-15` | Model used for text-to-speech         |
+| `TTS_VOICE`          | `alloy`                             | Default voice preset                  |
+| `TTS_LANG`           | `English`                           | Default narration language            |
 
 ## Scripts
 
-| Command | Description |
-|---|---|
-| `pnpm dev` | Run in development mode (tsx) |
-| `pnpm build` | Compile TypeScript to `dist/` |
-| `pnpm start` | Run compiled CLI |
-| `pnpm typecheck` | Type-check without emitting |
-| `pnpm lint` | Run ESLint |
-| `pnpm lint:fix` | Auto-fix lint issues |
+| Command          | Description                   |
+| ---------------- | ----------------------------- |
+| `pnpm dev`       | Run in development mode (tsx) |
+| `pnpm build`     | Compile TypeScript to `dist/` |
+| `pnpm start`     | Run compiled CLI              |
+| `pnpm typecheck` | Type-check without emitting   |
+| `pnpm lint`      | Run ESLint                    |
+| `pnpm lint:fix`  | Auto-fix lint issues          |

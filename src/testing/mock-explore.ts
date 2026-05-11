@@ -1,15 +1,21 @@
+// mock-explore.ts
+//
+// Test-mode substitute for the real explore stage.
+// Returns hardcoded steps (navigate + wait + scroll) so the rest of the
+// pipeline can run end-to-end without any LLM API calls.
+
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import type { ExploreResult } from '../types.js';
 
 /**
- * Mock explore stage for test mode. Returns predefined steps that navigate
- * to the target URL and scroll — no LLM calls, no AI credits used.
+ * Returns three deterministic steps targeting the given URL.
+ * No browser or LLM interaction — safe for CI and offline testing.
  */
 export async function mockExplore(
   prompt: string,
   url: string,
-  outDir: string,
+  outDir: string
 ): Promise<ExploreResult> {
   const result: ExploreResult = {
     title: `[TEST] ${prompt}`,

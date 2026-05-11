@@ -1,19 +1,20 @@
+// explore.ts
+//
+// AI agent that browses the target site turn-by-turn in a headless browser.
+// Each turn: LLM decides an action → we execute it → feed back the new page state.
+// Produces verified steps (selectors known to work) with narration text.
+
 import { chromium, type Page } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { chat, extractJson } from '../lib/llm.js';
 import type { ChatMessage } from '../lib/llm.js';
-import {
-  AgentTurnSchema,
-} from '../types.js';
-import type {
-  AgentTurn,
-  ExploreResult,
-  VerifiedStep,
-} from '../types.js';
+import { AgentTurnSchema } from '../types.js';
+import type { AgentTurn, ExploreResult, VerifiedStep } from '../types.js';
 
 const MAX_TURNS = 25;
 const ACTION_TIMEOUT_MS = 7000;
+// Aria snapshot is capped to fit within LLM context window.
 const SNAPSHOT_CHARS = 6000;
 
 function buildSystem(language: string): string {
@@ -59,16 +60,14 @@ JSON shape:
 }
 
 /**
- * Runs the explore agent: opens a headless browser, feeds page snapshots to
- * the LLM turn-by-turn, and executes each decided action immediately. Both
- * the step plan and narration text are produced in the same LLM call.
- * Returns verified steps whose selectors are known to work.
+ * Runs the explore agent loop. Returns verified steps with narration.
+ * Throws if the agent fails repeatedly or produces zero steps.
  */
 export async function explore(
   prompt: string,
   url: string,
   outDir: string,
-  language = 'English',
+  language = 'English'
 ): Promise<ExploreResult> {
   const SYSTEM = buildSystem(language);
   const browser = await chromium.launch({ headless: true });
@@ -80,7 +79,7 @@ export async function explore(
   let stepId = 1;
   let title = prompt;
 
-  // Seed: give the agent its goal and the blank browser state.
+  // Seed the conversation with the user's goal.
   history.push({
     role: 'user',
     content:
@@ -104,11 +103,14 @@ export async function explore(
       } catch (err) {
         consecutiveErrors++;
         if (consecutiveErrors >= 3) {
-          throw new Error(`Agent produced invalid JSON 3 times: ${(err as Error).message}`, { cause: err });
+          throw new Error(`Agent produced invalid JSON 3 times: ${(err as Error).message}`, {
+            cause: err,
+          });
         }
         history.push({
           role: 'user',
-          content: 'ERROR: Your last response was not valid JSON matching the schema. Reply with strict JSON only.',
+          content:
+            'ERROR: Your last response was not valid JSON matching the schema. Reply with strict JSON only.',
         });
         continue;
       }
@@ -165,9 +167,8 @@ export async function explore(
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
-// Maps an agent turn to a VerifiedStep. Returns null if the narration is
-// empty (e.g. for intermediate scroll/wait actions the agent skipped) or for
-// the terminal 'finish' action.
+// Converts an agent turn to a VerifiedStep. Returns null for turns
+// without narration (skipped actions) or the terminal 'finish' action.
 function toVerifiedStep(id: number, t: AgentTurn): VerifiedStep | null {
   const narration = t.narration.trim();
   if (!narration) return null;
@@ -175,21 +176,36 @@ function toVerifiedStep(id: number, t: AgentTurn): VerifiedStep | null {
   const { kind } = t.action;
 
   switch (kind) {
-    case 'navigate': return { id, action: kind, input: t.action.url ?? null, selector: null, narration };
-    case 'click':    return { id, action: kind, selector: t.action.selector ?? null, input: null, narration };
-    case 'type':     return { id, action: kind, selector: t.action.selector ?? null, input: t.action.text ?? null, narration };
-    case 'scroll':   return { id, action: kind, selector: null, input: null, narration };
-    case 'wait':     return { id, action: kind, selector: null, input: t.action.ms != null ? String(t.action.ms) : null, narration };
-    case 'finish':   return null;
+    case 'navigate':
+      return { id, action: kind, input: t.action.url ?? null, selector: null, narration };
+    case 'click':
+      return { id, action: kind, selector: t.action.selector ?? null, input: null, narration };
+    case 'type':
+      return {
+        id,
+        action: kind,
+        selector: t.action.selector ?? null,
+        input: t.action.text ?? null,
+        narration,
+      };
+    case 'scroll':
+      return { id, action: kind, selector: null, input: null, narration };
+    case 'wait':
+      return {
+        id,
+        action: kind,
+        selector: null,
+        input: t.action.ms != null ? String(t.action.ms) : null,
+        narration,
+      };
+    case 'finish':
+      return null;
   }
 }
 
-// Executes a single agent action in the browser. Returns ok:false on any
-// failure so the caller can feed the error back to the agent.
-async function tryAction(
-  page: Page,
-  t: AgentTurn,
-): Promise<ActionResult> {
+// Executes one browser action. Returns the error message on failure
+// so the agent can self-correct on the next turn.
+async function tryAction(page: Page, t: AgentTurn): Promise<ActionResult> {
   const a = t.action;
   try {
     switch (a.kind) {
@@ -228,13 +244,15 @@ async function tryAction(
   }
 }
 
-// Returns a compact text representation of the current page state:
-// URL, page title, and an aria snapshot of the visible content.
-// Capped at SNAPSHOT_CHARS to stay within LLM context limits.
+// Compact page representation for the LLM: URL, title, and aria tree.
 async function snapshot(page: Page): Promise<string> {
   const url = page.url();
   let title = '';
-  try { title = await page.title(); } catch { /* ignore */ }
+  try {
+    title = await page.title();
+  } catch {
+    /* ignore */
+  }
 
   let tree;
   try {

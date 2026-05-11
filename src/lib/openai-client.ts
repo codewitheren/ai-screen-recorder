@@ -1,3 +1,8 @@
+// openai-client.ts
+//
+// Singleton OpenAI client pointed at OpenRouter. Shared by both
+// the LLM chat helper and the TTS stage to avoid duplicate config.
+
 import OpenAI from 'openai';
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';

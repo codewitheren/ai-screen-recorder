@@ -14,7 +14,13 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "postinstall": "playwright install chromium"
+    "format": "prettier --write \"src/**/*.{ts,json,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,json,md}\"",
+    "check": "pnpm typecheck && pnpm lint && pnpm format:check",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "postinstall": "playwright install chromium",
+    "prepare": "husky"
   },
   "engines": {
     "node": ">=20"
@@ -32,9 +38,23 @@
     "@eslint/js": "^10.0.1",
     "@types/node": "^22.7.0",
     "eslint": "^10.3.0",
+    "eslint-config-prettier": "^10.1.8",
     "globals": "^17.6.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.4",
+    "prettier": "^3.8.3",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0",
-    "typescript-eslint": "^8.59.2"
+    "typescript-eslint": "^8.59.2",
+    "vitest": "^4.1.6"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md}": [
+      "prettier --write"
+    ]
   }
 }

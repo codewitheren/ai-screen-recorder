@@ -1,3 +1,9 @@
+// pipeline.ts
+//
+// Orchestrates the four-stage video generation pipeline:
+// explore → tts → record → compose.
+// Routes to mock implementations when test mode is active.
+
 import * as p from '@clack/prompts';
 import color from 'picocolors';
 import fs from 'node:fs/promises';
@@ -10,11 +16,9 @@ import { mockTts } from './testing/mock-tts.js';
 import type { AudioSegment, RunContext } from './types.js';
 
 /**
- * Runs the full pipeline for a single recorded video:
- *   1. explore — agent browses the site, builds verified steps + narrations
- *   2. tts     — synthesizes narration audio for each step
- *   3. record  — replays steps with video recording; holds each frame for audio
- *   4. compose — merges video + audio into a final MP4
+ * Runs the full pipeline and returns the path to the final MP4.
+ * In test mode, explore and TTS stages are replaced with mocks
+ * that produce deterministic output without API calls.
  */
 export async function runPipeline(ctx: RunContext): Promise<string> {
   await fs.mkdir(ctx.outDir, { recursive: true });
@@ -44,7 +48,7 @@ export async function runPipeline(ctx: RunContext): Promise<string> {
   const durationSec = Math.round((rec.timeline.at(-1)?.endMs ?? 0) / 1000);
   s.stop(`Recording complete — ${durationSec}s video`);
 
-  // Build a lookup map for O(1) timeline access instead of O(n) find per clip.
+  // O(1) lookup: map step IDs to their timeline entries for audio alignment.
   const timelineByStep = new Map(rec.timeline.map((t) => [t.stepId, t]));
   const audios: AudioSegment[] = clips.map((c) => {
     const entry = timelineByStep.get(c.stepId);

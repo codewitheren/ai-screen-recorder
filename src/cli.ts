@@ -1,4 +1,9 @@
 #!/usr/bin/env node
+// cli.ts
+//
+// Interactive entry point. Collects task parameters via @clack/prompts,
+// validates inputs, then hands off to the pipeline orchestrator.
+
 import 'dotenv/config';
 import path from 'node:path';
 import * as p from '@clack/prompts';
@@ -97,7 +102,7 @@ async function main(): Promise<void> {
         p.cancel('Operation cancelled.');
         process.exit(0);
       },
-    },
+    }
   );
 
   if (!config.confirm) {
@@ -127,7 +132,7 @@ async function main(): Promise<void> {
         `${color.dim('To play:')}`,
         `  open "${finalPath}"`,
       ].join('\n'),
-      'Done!',
+      'Done!'
     );
 
     p.outro(color.green('Video created successfully! 🎉'));
