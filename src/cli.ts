@@ -5,6 +5,13 @@ import chalk from 'chalk';
 import path from 'node:path';
 import { runPipeline } from './pipeline.js';
 
+interface CliOptions {
+  readonly url: string;
+  readonly voice: string;
+  readonly lang: string;
+  readonly out: string;
+}
+
 const program = new Command();
 
 program
@@ -15,7 +22,7 @@ program
   .option('-v, --voice <voice>', 'TTS voice', process.env.TTS_VOICE ?? 'alloy')
   .option('-l, --lang <language>', 'narration language (e.g. English, Turkish, Spanish)', process.env.TTS_LANG ?? 'English')
   .option('-o, --out <dir>', 'output directory root', './out')
-  .action(async (prompt: string, opts: { url: string; voice: string; lang: string; out: string }) => {
+  .action(async (prompt: string, opts: CliOptions) => {
     const stamp = new Date().toISOString().replace(/[:.]/g, '-');
     const outDir = path.resolve(opts.out, stamp);
 

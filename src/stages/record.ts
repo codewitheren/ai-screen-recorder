@@ -4,7 +4,6 @@ import fs from 'node:fs/promises';
 import type { ExploreResult, RecordResult, TimelineEntry, VerifiedStep } from '../types.js';
 
 const ACTION_TIMEOUT_MS = 8000;
-// Extra pause after each step so the narration audio has room to finish.
 const POST_STEP_GAP_MS = 400;
 
 /**

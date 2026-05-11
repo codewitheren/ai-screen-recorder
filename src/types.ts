@@ -45,36 +45,36 @@ export type AgentTurn = z.infer<typeof AgentTurnSchema>;
 
 // --- Record stage ---
 
-export type TimelineEntry = {
-  stepId: number;
-  startMs: number; // ms since recording started
-  endMs: number;
-};
+export interface TimelineEntry {
+  readonly stepId: number;
+  readonly startMs: number; // ms since recording started
+  readonly endMs: number;
+}
 
-export type RecordResult = {
-  videoPath: string;
-  timeline: TimelineEntry[];
-};
+export interface RecordResult {
+  readonly videoPath: string;
+  readonly timeline: readonly TimelineEntry[];
+}
 
 // --- TTS / Compose stages ---
 
-export type AudioClip = {
-  stepId: number;
-  durationMs: number;
-  audioPath: string;
-};
+export interface AudioClip {
+  readonly stepId: number;
+  readonly durationMs: number;
+  readonly audioPath: string;
+}
 
 // AudioSegment extends AudioClip with the video-aligned start time.
-export type AudioSegment = AudioClip & {
-  startMs: number;
-};
+export interface AudioSegment extends AudioClip {
+  readonly startMs: number;
+}
 
 // --- Pipeline ---
 
-export type RunContext = {
-  prompt: string;
-  url: string;
-  voice: string;
-  language: string;
-  outDir: string;
-};
+export interface RunContext {
+  readonly prompt: string;
+  readonly url: string;
+  readonly voice: string;
+  readonly language: string;
+  readonly outDir: string;
+}

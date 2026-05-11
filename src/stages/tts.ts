@@ -1,22 +1,11 @@
-import OpenAI from 'openai';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { execa } from 'execa';
+import { getOpenAIClient } from '../openai-client.js';
 import type { AudioClip, ExploreResult } from '../types.js';
 
-const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const TTS_MODEL = process.env.TTS_MODEL ?? 'openai/gpt-4o-mini-tts-2025-12-15';
-
-// Singleton client — initialized on first use.
-let client: OpenAI | null = null;
-function getClient(): OpenAI {
-  if (!client) {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
-    client = new OpenAI({ apiKey, baseURL: OPENROUTER_BASE_URL });
-  }
-  return client;
-}
+const MAX_RETRIES = 2;
 
 /**
  * Synthesizes a narration MP3 for each step in the explore result.
@@ -51,10 +40,10 @@ async function getAudioDurationMs(filePath: string): Promise<number> {
   return Math.ceil(parseFloat(stdout.trim()) * 1000);
 }
 
-async function ttsToFile(text: string, voice: string, outPath: string, retries = 2): Promise<void> {
-  for (let attempt = 0; attempt <= retries; attempt++) {
+async function ttsToFile(text: string, voice: string, outPath: string): Promise<void> {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
-      const response = await getClient().audio.speech.create({
+      const response = await getOpenAIClient().audio.speech.create({
         model: TTS_MODEL,
         voice: voice,
         input: text,
@@ -64,8 +53,7 @@ async function ttsToFile(text: string, voice: string, outPath: string, retries =
       await fs.writeFile(outPath, buf);
       return;
     } catch (err) {
-      const isLast = attempt === retries;
-      if (isLast) throw err;
+      if (attempt === MAX_RETRIES) throw err;
       const waitMs = 1000 * (attempt + 1);
       console.error(`  TTS attempt ${attempt + 1} failed, retrying in ${waitMs}ms...`);
       await new Promise((r) => setTimeout(r, waitMs));

@@ -1,13 +1,15 @@
 import { chromium, type Page } from 'playwright';
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { chat, extractJson, type ChatMessage } from '../llm.js';
+import { chat, extractJson } from '../llm.js';
+import type { ChatMessage } from '../llm.js';
 import {
   AgentTurnSchema,
-  type AgentTurn,
-  type ExploreResult,
-  type StepAction,
-  type VerifiedStep,
+} from '../types.js';
+import type {
+  AgentTurn,
+  ExploreResult,
+  VerifiedStep,
 } from '../types.js';
 
 const MAX_TURNS = 25;
@@ -161,6 +163,8 @@ export async function explore(
   return result;
 }
 
+type ActionResult = { ok: true } | { ok: false; error: string };
+
 // Maps an agent turn to a VerifiedStep. Returns null if the narration is
 // empty (e.g. for intermediate scroll/wait actions the agent skipped) or for
 // the terminal 'finish' action.
@@ -168,15 +172,14 @@ function toVerifiedStep(id: number, t: AgentTurn): VerifiedStep | null {
   const narration = t.narration.trim();
   if (!narration) return null;
 
-  const action = t.action.kind as StepAction;
-  const a = t.action;
+  const { kind } = t.action;
 
-  switch (a.kind) {
-    case 'navigate': return { id, action, input: a.url ?? null, selector: null, narration };
-    case 'click':    return { id, action, selector: a.selector ?? null, input: null, narration };
-    case 'type':     return { id, action, selector: a.selector ?? null, input: a.text ?? null, narration };
-    case 'scroll':   return { id, action, selector: null, input: null, narration };
-    case 'wait':     return { id, action, selector: null, input: a.ms != null ? String(a.ms) : null, narration };
+  switch (kind) {
+    case 'navigate': return { id, action: kind, input: t.action.url ?? null, selector: null, narration };
+    case 'click':    return { id, action: kind, selector: t.action.selector ?? null, input: null, narration };
+    case 'type':     return { id, action: kind, selector: t.action.selector ?? null, input: t.action.text ?? null, narration };
+    case 'scroll':   return { id, action: kind, selector: null, input: null, narration };
+    case 'wait':     return { id, action: kind, selector: null, input: t.action.ms != null ? String(t.action.ms) : null, narration };
     case 'finish':   return null;
   }
 }
@@ -186,7 +189,7 @@ function toVerifiedStep(id: number, t: AgentTurn): VerifiedStep | null {
 async function tryAction(
   page: Page,
   t: AgentTurn,
-): Promise<{ ok: true } | { ok: false; error: string }> {
+): Promise<ActionResult> {
   const a = t.action;
   try {
     switch (a.kind) {

@@ -1,38 +1,28 @@
-import OpenAI from 'openai';
+import { getOpenAIClient } from './openai-client.js';
 
-const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
 const MODEL = process.env.LLM_MODEL ?? 'anthropic/claude-sonnet-4-5';
 
-// Singleton client — initialized on first use.
-let client: OpenAI | null = null;
-
-function getClient(): OpenAI {
-  if (!client) {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-    if (!apiKey) throw new Error('OPENROUTER_API_KEY is not set');
-    client = new OpenAI({ apiKey, baseURL: OPENROUTER_BASE_URL });
-  }
-  return client;
+export interface ChatMessage {
+  readonly role: 'user' | 'assistant';
+  readonly content: string;
 }
 
-export type ChatMessage =
-  | { role: 'user'; content: string }
-  | { role: 'assistant'; content: string };
+export interface ChatOptions {
+  readonly system: string;
+  readonly messages: readonly ChatMessage[];
+  readonly maxTokens?: number;
+}
 
 /**
  * Sends a multi-turn conversation to the LLM and returns the response text.
  * The system prompt is prepended automatically; callers manage the history.
  */
-export async function chat(opts: {
-  system: string;
-  messages: ChatMessage[];
-  maxTokens?: number;
-}): Promise<string> {
-  const res = await getClient().chat.completions.create({
+export async function chat(opts: ChatOptions): Promise<string> {
+  const res = await getOpenAIClient().chat.completions.create({
     model: MODEL,
     max_tokens: opts.maxTokens ?? 2048,
     messages: [
-      { role: 'system', content: opts.system },
+      { role: 'system' as const, content: opts.system },
       ...opts.messages,
     ],
   });

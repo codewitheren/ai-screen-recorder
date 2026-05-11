@@ -22,7 +22,7 @@ export async function runPipeline(ctx: RunContext): Promise<string> {
 
   process.stdout.write(chalk.gray('[tts]     '));
   const clips = await tts(plan, ctx.voice, ctx.outDir);
-  const audioDurations = new Map(clips.map((c) => [c.stepId, c.durationMs]));
+  const audioDurations = new Map<number, number>(clips.map((c) => [c.stepId, c.durationMs]));
   const totalAudioSec = Math.round([...audioDurations.values()].reduce((a, b) => a + b, 0) / 1000);
   console.log(chalk.green(`✓ ${clips.length} audio files (${totalAudioSec}s total)`));
 
@@ -31,9 +31,10 @@ export async function runPipeline(ctx: RunContext): Promise<string> {
   const durationSec = Math.round((rec.timeline.at(-1)?.endMs ?? 0) / 1000);
   console.log(chalk.green(`✓ recorded ${durationSec}s`));
 
-  // Map each audio clip to its actual on-screen start time from the timeline.
+  // Build a lookup map for O(1) timeline access instead of O(n) find per clip.
+  const timelineByStep = new Map(rec.timeline.map((t) => [t.stepId, t]));
   const audios: AudioSegment[] = clips.map((c) => {
-    const entry = rec.timeline.find((x) => x.stepId === c.stepId);
+    const entry = timelineByStep.get(c.stepId);
     if (!entry) throw new Error(`No timeline entry for step ${c.stepId}`);
     return { ...c, startMs: entry.startMs };
   });

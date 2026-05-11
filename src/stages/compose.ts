@@ -8,7 +8,7 @@ import type { AudioSegment } from '../types.js';
  */
 export async function compose(
   videoPath: string,
-  audios: AudioSegment[],
+  audios: readonly AudioSegment[],
   outDir: string,
 ): Promise<string> {
   const finalPath = path.join(outDir, 'final.mp4');
@@ -19,24 +19,9 @@ export async function compose(
   for (const a of sorted) inputs.push('-i', a.audioPath);
 
   // Build filter_complex: delay each audio stream to its step start, then mix.
-  // Input index 0 = video; audio inputs start at 1.
-  const delayParts: string[] = [];
-  const mixLabels: string[] = [];
-  sorted.forEach((a, i) => {
-    const delayMs = Math.max(0, a.startMs);
-    delayParts.push(`[${i + 1}:a]adelay=${delayMs}|${delayMs}[a${i}]`);
-    mixLabels.push(`[a${i}]`);
-  });
+  const filter = buildAudioFilter(sorted);
 
-  const filter = sorted.length > 0
-    ? [
-        ...delayParts,
-        `${mixLabels.join('')}amix=inputs=${sorted.length}:dropout_transition=0:normalize=0[mixed]`,
-        `[mixed]loudnorm[aout]`,
-      ].join(';')
-    : '';
-
-  const args = [
+  const args: string[] = [
     '-y',
     ...inputs,
     ...(filter
@@ -56,4 +41,25 @@ export async function compose(
 
   await execa('ffmpeg', args, { stdio: 'inherit' });
   return finalPath;
+}
+
+function buildAudioFilter(sorted: readonly AudioSegment[]): string {
+  if (sorted.length === 0) return '';
+
+  const delayParts: string[] = [];
+  const mixLabels: string[] = [];
+
+  for (let i = 0; i < sorted.length; i++) {
+    const segment = sorted[i];
+    if (!segment) continue;
+    const delayMs = Math.max(0, segment.startMs);
+    delayParts.push(`[${i + 1}:a]adelay=${delayMs}|${delayMs}[a${i}]`);
+    mixLabels.push(`[a${i}]`);
+  }
+
+  return [
+    ...delayParts,
+    `${mixLabels.join('')}amix=inputs=${sorted.length}:dropout_transition=0:normalize=0[mixed]`,
+    `[mixed]loudnorm[aout]`,
+  ].join(';');
 }
