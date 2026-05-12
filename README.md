@@ -8,6 +8,22 @@
 
 [Features](#features) • [How It Works](#how-it-works) • [Prerequisites](#prerequisites) • [Getting Started](#getting-started) • [Usage](#usage) • [Configuration](#configuration)
 
+## Demo
+
+The video below was generated with a single command (`pnpm dev`) using these inputs:
+
+| Prompt   | "Wikipedia'da örnek bir arama nasıl yapılır?" |
+| -------- | --------------------------------------------- |
+| URL      | https://wikipedia.org/                        |
+| Language | Turkish                                       |
+| Voice    | Nova (friendly, upbeat)                       |
+
+<!-- markdownlint-disable MD033 -->
+
+<video src="assets/demo.mp4" controls width="100%"></video>
+
+<!-- markdownlint-enable MD033 -->
+
 An AI-powered CLI tool that turns a plain-text task description into a fully narrated 1080p tutorial video. Describe what you want to demonstrate on a website, pick a language and voice, and the tool handles browser automation, screen recording, voice-over synthesis, and final video composition — all without manual editing.
 
 ## Features
