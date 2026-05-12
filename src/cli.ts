@@ -33,7 +33,7 @@ const LANGUAGES = [
 ] as const;
 
 async function main(): Promise<void> {
-  p.intro(color.bgCyan(color.black(' 🎬 AI Screen Recorder ')));
+  p.intro(color.bgCyan(color.black(' 🎬 AutoDemo ')));
 
   const config = await p.group(
     {
@@ -130,7 +130,7 @@ async function main(): Promise<void> {
         `${color.green('✔')} Video: ${color.cyan(finalPath)}`,
         '',
         `${color.dim('To play:')}`,
-        `  open "${finalPath}"`,
+        ` open "${finalPath}"`,
       ].join('\n'),
       'Done!'
     );

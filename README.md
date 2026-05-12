@@ -1,6 +1,6 @@
 <div align="center">
 
-# AI Screen Recorder
+# AutoDemo
 
 _Generate tutorial videos from a single text prompt_
 
@@ -55,8 +55,8 @@ The pipeline runs in four sequential stages:
 
 ```bash
 # Clone the repository
-git clone https://github.com/codewitheren/ai-screen-recorder.git
-cd ai-screen-recorder
+git clone https://github.com/codewitheren/auto-demo.git
+cd auto-demo
 
 # Install dependencies
 pnpm install
@@ -94,7 +94,7 @@ Output is saved to `./out/<timestamp>/final.mp4` by default.
 ```
 $ pnpm dev
 
-┌  🎬 AI Screen Recorder
+┌  🎬 AutoDemo
 │
 ◆  What do you want to do?
 │  Show how to create a new repository on GitHub

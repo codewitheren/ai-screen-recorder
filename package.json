@@ -1,11 +1,11 @@
 {
-  "name": "ai-screen-recorder",
+  "name": "auto-demo",
   "version": "0.1.0",
   "description": "AI-powered tutorial video generator (CLI)",
   "type": "module",
   "private": true,
   "bin": {
-    "ai-screen-recorder": "./dist/cli.js"
+    "auto-demo": "./dist/cli.js"
   },
   "scripts": {
     "dev": "tsx src/cli.ts",

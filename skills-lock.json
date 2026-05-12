@@ -43,6 +43,12 @@
       "skillPath": "skills/.curated/playwright/SKILL.md",
       "computedHash": "ca5bb4882a7e52762f36220a0e96262198e0c8d48bedaad21a289bab9301d1f9"
     },
+    "product-name": {
+      "source": "phuryn/pm-skills",
+      "sourceType": "github",
+      "skillPath": "pm-marketing-growth/skills/product-name/SKILL.md",
+      "computedHash": "37cca037c08948af87728d31b676c2192029fa8ca0a4dd62584ad0839dee55a7"
+    },
     "refactor": {
       "source": "pproenca/dot-skills",
       "sourceType": "github",
