@@ -1,16 +1,12 @@
-<div align="center">
-
 # AutoDemo
 
-_Generate tutorial videos from a single text prompt_
+> Generate tutorial videos from a single text prompt
 
 [![Node.js](https://img.shields.io/badge/Node.js->=20-3c873a?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?style=flat-square)](https://www.typescriptlang.org)
 [![Playwright](https://img.shields.io/badge/Playwright-1.48-2ead33?style=flat-square)](https://playwright.dev)
 
 [Features](#features) • [How It Works](#how-it-works) • [Prerequisites](#prerequisites) • [Getting Started](#getting-started) • [Usage](#usage) • [Configuration](#configuration)
-
-</div>
 
 An AI-powered CLI tool that turns a plain-text task description into a fully narrated 1080p tutorial video. Describe what you want to demonstrate on a website, pick a language and voice, and the tool handles browser automation, screen recording, voice-over synthesis, and final video composition — all without manual editing.
 
@@ -28,7 +24,7 @@ An AI-powered CLI tool that turns a plain-text task description into a fully nar
 
 The pipeline runs in four sequential stages:
 
-```
+```text
 ┌──────────┐     ┌─────┐     ┌────────┐     ┌─────────┐
 │  Explore │ ──▶ │ TTS │ ──▶ │ Record │ ──▶ │ Compose │
 └──────────┘     └─────┘     └────────┘     └─────────┘
@@ -91,7 +87,7 @@ Output is saved to `./out/<timestamp>/final.mp4` by default.
 
 ### Example
 
-```
+```text
 $ pnpm dev
 
 ┌  🎬 AutoDemo

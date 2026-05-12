@@ -31,6 +31,9 @@ export async function record(
     viewport: { width: 1920, height: 1080 },
     recordVideo: { dir: videoDir, size: { width: 1920, height: 1080 } },
   });
+  // Playwright's video capture doesn't include the real OS cursor, so we
+  // inject a virtual cursor overlay that follows mouse events on every page.
+  await context.addInitScript({ content: VIRTUAL_CURSOR_SCRIPT });
   const page = await context.newPage();
 
   const timeline: TimelineEntry[] = [];
@@ -83,6 +86,7 @@ async function runStep(page: Page, step: VerifiedStep, fallbackUrl: string): Pro
       if (!step.selector) throw new Error(`Step ${step.id}: click missing selector`);
       const loc = page.locator(step.selector).first();
       await loc.waitFor({ state: 'visible', timeout: ACTION_TIMEOUT_MS });
+      await moveCursorTo(page, loc);
       await loc.click({ timeout: ACTION_TIMEOUT_MS });
       return;
     }
@@ -90,8 +94,58 @@ async function runStep(page: Page, step: VerifiedStep, fallbackUrl: string): Pro
       if (!step.selector) throw new Error(`Step ${step.id}: type missing selector`);
       const loc = page.locator(step.selector).first();
       await loc.waitFor({ state: 'visible', timeout: ACTION_TIMEOUT_MS });
+      await moveCursorTo(page, loc);
       await loc.fill(step.input ?? '', { timeout: ACTION_TIMEOUT_MS });
       return;
     }
   }
 }
+
+// Smoothly moves the real Playwright mouse to the element's center. This
+// drives the injected virtual cursor (via mousemove events) so viewers see
+// the pointer travel toward each interaction.
+async function moveCursorTo(page: Page, locator: ReturnType<Page['locator']>): Promise<void> {
+  const box = await locator.boundingBox();
+  if (!box) return;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  await page.mouse.move(x, y, { steps: 20 });
+}
+
+// Browser-side script injected into every page. Renders a cursor div and
+// updates its position on mousemove. Kept as a string so this Node module
+// doesn't need DOM types in tsconfig.
+const VIRTUAL_CURSOR_SCRIPT = `
+(() => {
+  const install = () => {
+    if (document.getElementById('__ai_cursor__')) return;
+    const cursor = document.createElement('div');
+    cursor.id = '__ai_cursor__';
+    cursor.style.cssText = [
+      'position:fixed',
+      'top:0',
+      'left:0',
+      'width:20px',
+      'height:20px',
+      'border-radius:50%',
+      'background:rgba(255,64,64,0.85)',
+      'border:2px solid #fff',
+      'box-shadow:0 0 8px rgba(0,0,0,0.5)',
+      'pointer-events:none',
+      'z-index:2147483647',
+      'transform:translate(-50%,-50%)',
+      'transition:transform 0.05s linear'
+    ].join(';');
+    document.documentElement.appendChild(cursor);
+    window.addEventListener('mousemove', (e) => {
+      cursor.style.left = e.clientX + 'px';
+      cursor.style.top = e.clientY + 'px';
+    }, { passive: true, capture: true });
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', install, { once: true });
+  } else {
+    install();
+  }
+})();
+`;
