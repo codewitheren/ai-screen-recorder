@@ -20,7 +20,7 @@ The video below was generated with a single command (`pnpm dev`) using these inp
 
 <!-- markdownlint-disable MD033 -->
 
-<video src="https://github.com/codewitheren/ai-screen-recorder/raw/main/assets/demo.mp4" controls width="100%"></video>
+<video src="https://github.com/codewitheren/auto-demo/raw/main/assets/demo.mp4" controls width="100%"></video>
 
 <!-- markdownlint-enable MD033 -->
 
