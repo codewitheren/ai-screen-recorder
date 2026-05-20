@@ -1,10 +1,16 @@
 # AutoDemo
 
-> Generate tutorial videos from a single text prompt
+**An AI-powered CLI tool that automatically controls a browser, records the screen, synthesizes voice-over narration, and composes fully synchronized 1080p Web/Product tutorial videos—entirely from a single text prompt.**
 
 [![Node.js](https://img.shields.io/badge/Node.js->=20-3c873a?style=flat-square)](https://nodejs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6?style=flat-square)](https://www.typescriptlang.org)
 [![Playwright](https://img.shields.io/badge/Playwright-1.48-2ead33?style=flat-square)](https://playwright.dev)
+
+<!-- HERO-MEDIA-START -->
+
+![AutoDemo Hero Action](assets/hero-demo.gif)
+
+<!-- HERO-MEDIA-END -->
 
 [Features](#features) • [How It Works](#how-it-works) • [Prerequisites](#prerequisites) • [Getting Started](#getting-started) • [Usage](#usage) • [Configuration](#configuration)
 

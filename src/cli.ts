@@ -31,7 +31,7 @@ async function main(): Promise<void> {
       prompt: () =>
         p.text({
           message: 'What do you want to do?',
-          placeholder: 'Show how to create a new pen on CodePen',
+          placeholder: 'Show how to search for something on Wikipedia',
           validate: (value) => {
             if (!value?.trim()) return 'Please enter a task description';
           },
@@ -40,7 +40,7 @@ async function main(): Promise<void> {
       url: () =>
         p.text({
           message: 'Target website URL?',
-          placeholder: 'https://codepen.io',
+          placeholder: 'https://wikipedia.org',
           validate: (value) => {
             if (!value?.trim()) return 'URL is required';
             try {
