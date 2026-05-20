@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 // cli.ts
 //
-// Interactive entry point. Collects task parameters via @clack/prompts,
-// validates inputs, then hands off to the pipeline orchestrator.
+// Interactive entry point. Collects task parameters from the user via
+// @clack/prompts, runs preflight checks, then hands off to the pipeline
+// orchestrator. All user-facing strings live here; the pipeline itself
+// is silent except for spinner updates.
 
 import 'dotenv/config';
 import path from 'node:path';
 import * as p from '@clack/prompts';
 import color from 'picocolors';
 import { runPipeline } from './pipeline.js';
+import { preflightApiKey, preflightSystem } from './lib/preflight.js';
 
 const VOICES = [
   { value: 'alloy', label: 'Alloy', hint: 'neutral, balanced' },
@@ -34,6 +37,15 @@ const LANGUAGES = [
 
 async function main(): Promise<void> {
   p.intro(color.bgCyan(color.black(' 🎬 AutoDemo ')));
+
+  try {
+    preflightApiKey();
+    await preflightSystem();
+  } catch (err) {
+    p.log.error(err instanceof Error ? err.message : String(err));
+    p.outro(color.red('Prerequisites missing.'));
+    process.exit(1);
+  }
 
   const config = await p.group(
     {
@@ -81,12 +93,6 @@ async function main(): Promise<void> {
           placeholder: './out',
         }),
 
-      testMode: () =>
-        p.confirm({
-          message: `Enable ${color.yellow('test mode')}? (no AI credits used)`,
-          initialValue: false,
-        }),
-
       confirm: ({ results }) => {
         const url = results.url ?? '';
         const prompt = results.prompt ?? '';
@@ -122,7 +128,6 @@ async function main(): Promise<void> {
       voice: config.voice as string,
       language: config.language as string,
       outDir,
-      testMode: config.testMode ?? false,
     });
 
     p.note(
