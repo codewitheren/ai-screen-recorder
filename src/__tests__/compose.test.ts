@@ -3,8 +3,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 vi.mock('execa', () => ({ execa: vi.fn() }));
 
 import { execa } from 'execa';
-import { buildAudioFilter, compose } from '../stages/compose.js';
-import type { AudioSegment } from '../types.js';
+import { compose, type AudioSegment } from '../stages/index.ts';
+import { buildAudioFilter } from '../stages/compose/logic.ts';
 
 const mockedExeca = vi.mocked(execa);
 
@@ -18,7 +18,7 @@ describe('buildAudioFilter', () => {
       { stepId: 1, durationMs: 2000, audioPath: '/tmp/a.mp3', startMs: 0 },
     ];
     const filter = buildAudioFilter(segments);
-    expect(filter).toContain('[1:a]adelay=0|0[a0]');
+    expect(filter).toContain('[1:a]adelay=0:all=1[a0]');
     expect(filter).toContain('amix=inputs=1');
     expect(filter).toContain('loudnorm[aout]');
   });
@@ -30,9 +30,9 @@ describe('buildAudioFilter', () => {
       { stepId: 3, durationMs: 1500, audioPath: '/tmp/c.mp3', startMs: 5000 },
     ];
     const filter = buildAudioFilter(segments);
-    expect(filter).toContain('[1:a]adelay=0|0[a0]');
-    expect(filter).toContain('[2:a]adelay=2500|2500[a1]');
-    expect(filter).toContain('[3:a]adelay=5000|5000[a2]');
+    expect(filter).toContain('[1:a]adelay=0:all=1[a0]');
+    expect(filter).toContain('[2:a]adelay=2500:all=1[a1]');
+    expect(filter).toContain('[3:a]adelay=5000:all=1[a2]');
     expect(filter).toContain('amix=inputs=3');
     expect(filter).toContain('[a0][a1][a2]');
   });
@@ -42,7 +42,7 @@ describe('buildAudioFilter', () => {
       { stepId: 1, durationMs: 1000, audioPath: '/tmp/a.mp3', startMs: -500 },
     ];
     const filter = buildAudioFilter(segments);
-    expect(filter).toContain('adelay=0|0');
+    expect(filter).toContain('adelay=0:all=1');
   });
 });
 
@@ -110,8 +110,8 @@ describe('compose', () => {
     const fcIdx = args.indexOf('-filter_complex');
     expect(fcIdx).toBeGreaterThan(-1);
     const graph = args[fcIdx + 1] ?? '';
-    expect(graph).toContain('[1:a]adelay=0|0[a0]');
-    expect(graph).toContain('[2:a]adelay=1500|1500[a1]');
+    expect(graph).toContain('[1:a]adelay=0:all=1[a0]');
+    expect(graph).toContain('[2:a]adelay=1500:all=1[a1]');
     expect(graph).toContain('amix=inputs=2');
     expect(graph).toContain('loudnorm[aout]');
 

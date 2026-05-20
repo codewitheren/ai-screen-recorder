@@ -1,24 +1,26 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { ExploreResult, RunContext } from '../types.js';
+import type { ExploreResult } from '../stages/explore/types.ts';
+import type { RunContext } from '../pipeline.ts';
 
 // Stage modules are mocked so the pipeline runs without spawning a real
 // browser, ffmpeg, or hitting OpenRouter.
-vi.mock('../stages/explore.js', () => ({
+vi.mock('../stages/index.ts', () => ({
   explore: vi.fn(),
-}));
-vi.mock('../stages/record.js', () => ({
   record: vi.fn(),
-}));
-vi.mock('../stages/tts.js', () => ({
   tts: vi.fn(),
-}));
-vi.mock('../stages/compose.js', () => ({
   compose: vi.fn(),
 }));
-// `@clack/prompts` would otherwise write spinners to stdout under vitest.
+// `@clack/prompts` would otherwise write to stdout under vitest.
 vi.mock('@clack/prompts', () => ({
-  log: { warn: vi.fn(), info: vi.fn(), error: vi.fn() },
-  spinner: () => ({ start: vi.fn(), stop: vi.fn() }),
+  log: {
+    warn: vi.fn(),
+    info: vi.fn(),
+    error: vi.fn(),
+    step: vi.fn(),
+    message: vi.fn(),
+    success: vi.fn(),
+  },
+  spinner: () => ({ start: vi.fn(), stop: vi.fn(), message: vi.fn() }),
 }));
 
 describe('runPipeline', () => {
@@ -27,10 +29,7 @@ describe('runPipeline', () => {
   });
 
   it('runs all four stages and returns the final mp4 path', async () => {
-    const { explore } = await import('../stages/explore.js');
-    const { tts } = await import('../stages/tts.js');
-    const { record } = await import('../stages/record.js');
-    const { compose } = await import('../stages/compose.js');
+    const { explore, tts, record, compose } = await import('../stages/index.ts');
 
     const mockPlan = {
       title: 'Real',
@@ -46,7 +45,7 @@ describe('runPipeline', () => {
     vi.mocked(record).mockResolvedValue({ videoPath: '/tmp/v.webm', timeline: mockTimeline });
     vi.mocked(compose).mockResolvedValue('/tmp/final.mp4');
 
-    const { runPipeline } = await import('../pipeline.js');
+    const { runPipeline } = await import('../pipeline.ts');
 
     const ctx: RunContext = {
       prompt: 'real task',
@@ -58,16 +57,20 @@ describe('runPipeline', () => {
 
     const result = await runPipeline(ctx);
     expect(result).toBe('/tmp/final.mp4');
-    expect(explore).toHaveBeenCalledWith('real task', 'https://x.com', '/tmp/real-out', 'English');
+    expect(explore).toHaveBeenCalledWith(
+      'real task',
+      'https://x.com',
+      '/tmp/real-out',
+      'English',
+      expect.objectContaining({ onProgress: expect.any(Function) })
+    );
     expect(tts).toHaveBeenCalled();
     expect(record).toHaveBeenCalled();
     expect(compose).toHaveBeenCalled();
   });
 
   it('throws when timeline entry is missing for a step', async () => {
-    const { explore } = await import('../stages/explore.js');
-    const { tts } = await import('../stages/tts.js');
-    const { record } = await import('../stages/record.js');
+    const { explore, tts, record } = await import('../stages/index.ts');
 
     const mockPlan = {
       title: 'Test',
@@ -87,7 +90,7 @@ describe('runPipeline', () => {
     vi.mocked(tts).mockResolvedValue(mockClips);
     vi.mocked(record).mockResolvedValue({ videoPath: '/tmp/v.webm', timeline: mockTimeline });
 
-    const { runPipeline } = await import('../pipeline.js');
+    const { runPipeline } = await import('../pipeline.ts');
 
     const ctx: RunContext = {
       prompt: 'test',

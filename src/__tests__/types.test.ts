@@ -4,7 +4,7 @@ import {
   VerifiedStepSchema,
   ExploreResultSchema,
   AgentTurnSchema,
-} from '../types.js';
+} from '../stages/index.ts';
 
 describe('StepActionSchema', () => {
   it('accepts valid actions', () => {

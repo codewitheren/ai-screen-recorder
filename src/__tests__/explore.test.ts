@@ -2,13 +2,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
-import type * as llmModule from '../lib/llm.js';
+import type * as llmModule from '../lib/llm.ts';
 
 // --- Mocks ------------------------------------------------------------------
 
 const { chatMock } = vi.hoisted(() => ({ chatMock: vi.fn() }));
-vi.mock('../lib/llm.js', async () => {
-  const actual = await vi.importActual<typeof llmModule>('../lib/llm.js');
+vi.mock('../lib/llm.ts', async () => {
+  const actual = await vi.importActual<typeof llmModule>('../lib/llm.ts');
   return {
     ...actual,
     chat: chatMock,
@@ -74,7 +74,7 @@ vi.mock('playwright', () => {
   };
 });
 
-import { explore } from '../stages/explore.js';
+import { explore } from '../stages/index.ts';
 
 async function makeOutDir(): Promise<string> {
   return fs.mkdtemp(path.join(os.tmpdir(), 'explore-test-'));

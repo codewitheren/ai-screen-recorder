@@ -1,13 +1,9 @@
-// compose.ts
-//
-// Final stage: mixes the recorded .webm with the per-step narration MP3s
-// into a single loudness-normalized 1080p MP4. Each audio clip is
-// `adelay`-shifted to its step's start offset so narration lines up with
-// the action it describes.
-
 import { execa } from 'execa';
 import path from 'node:path';
-import type { AudioSegment } from '../types.js';
+import { buildAudioFilter } from './logic.ts';
+import type { AudioSegment } from './types.ts';
+
+export * from './types.ts';
 
 /**
  * Encodes `videoPath` together with `audios` into `outDir/final.mp4`.
@@ -57,32 +53,4 @@ export async function compose(
 
   await execa('ffmpeg', args, { stdio: 'pipe' });
   return finalPath;
-}
-
-/**
- * Builds the `-filter_complex` graph that delays each audio clip to its
- * step's start offset, mixes them, and applies loudness normalization.
- *
- * Exported so the unit tests can assert the generated graph without
- * spawning ffmpeg. Returns an empty string when there are no segments.
- */
-export function buildAudioFilter(sorted: readonly AudioSegment[]): string {
-  if (sorted.length === 0) return '';
-
-  const delayParts: string[] = [];
-  const mixLabels: string[] = [];
-
-  for (let i = 0; i < sorted.length; i++) {
-    const segment = sorted[i];
-    if (!segment) continue;
-    const delayMs = Math.max(0, segment.startMs);
-    delayParts.push(`[${i + 1}:a]adelay=${delayMs}|${delayMs}[a${i}]`);
-    mixLabels.push(`[a${i}]`);
-  }
-
-  return [
-    ...delayParts,
-    `${mixLabels.join('')}amix=inputs=${sorted.length}:dropout_transition=0:normalize=0[mixed]`,
-    `[mixed]loudnorm[aout]`,
-  ].join(';');
 }
