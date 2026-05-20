@@ -2,19 +2,19 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
-import type { ExploreResult } from '../types.js';
+import type { ExploreResult } from '../stages/index.ts';
 
 vi.mock('execa', () => ({ execa: vi.fn() }));
 
 const speechCreate = vi.fn();
-vi.mock('../lib/openai-client.js', () => ({
+vi.mock('../lib/openai-client.ts', () => ({
   getOpenAIClient: () => ({
     audio: { speech: { create: speechCreate } },
   }),
 }));
 
 import { execa } from 'execa';
-import { tts } from '../stages/tts.js';
+import { tts } from '../stages/index.ts';
 
 const mockedExeca = vi.mocked(execa);
 

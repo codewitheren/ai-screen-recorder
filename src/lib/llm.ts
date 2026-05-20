@@ -6,7 +6,7 @@
 // the JSON extraction logic so the explore agent doesn't have to deal
 // with markdown-fenced responses scattered across stages.
 
-import { getOpenAIClient } from './openai-client.js';
+import { getOpenAIClient } from './openai-client.ts';
 
 const MODEL = process.env.LLM_MODEL ?? 'openai/gpt-4o-mini';
 

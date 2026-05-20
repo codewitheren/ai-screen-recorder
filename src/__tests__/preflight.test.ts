@@ -12,7 +12,7 @@ vi.mock('playwright', () => ({
 import { execa } from 'execa';
 import fs from 'node:fs';
 import { chromium } from 'playwright';
-import { preflightApiKey, preflightSystem } from '../lib/preflight.js';
+import { preflightApiKey, preflightSystem } from '../lib/preflight.ts';
 
 const mockedExeca = vi.mocked(execa);
 const mockedExistsSync = vi.mocked(fs.existsSync);

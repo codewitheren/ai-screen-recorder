@@ -10,30 +10,9 @@ import 'dotenv/config';
 import path from 'node:path';
 import * as p from '@clack/prompts';
 import color from 'picocolors';
-import { runPipeline } from './pipeline.js';
-import { preflightApiKey, preflightSystem } from './lib/preflight.js';
-
-const VOICES = [
-  { value: 'alloy', label: 'Alloy', hint: 'neutral, balanced' },
-  { value: 'echo', label: 'Echo', hint: 'warm, confident' },
-  { value: 'fable', label: 'Fable', hint: 'expressive, British' },
-  { value: 'onyx', label: 'Onyx', hint: 'deep, authoritative' },
-  { value: 'nova', label: 'Nova', hint: 'friendly, upbeat' },
-  { value: 'shimmer', label: 'Shimmer', hint: 'clear, gentle' },
-] as const;
-
-const LANGUAGES = [
-  { value: 'English', label: 'English' },
-  { value: 'Turkish', label: 'Türkçe' },
-  { value: 'Spanish', label: 'Español' },
-  { value: 'French', label: 'Français' },
-  { value: 'German', label: 'Deutsch' },
-  { value: 'Japanese', label: '日本語' },
-  { value: 'Chinese', label: '中文' },
-  { value: 'Korean', label: '한국어' },
-  { value: 'Portuguese', label: 'Português' },
-  { value: 'Arabic', label: 'العربية' },
-] as const;
+import { runPipeline } from './pipeline.ts';
+import { preflightApiKey, preflightSystem } from './lib/preflight.ts';
+import { VOICES, LANGUAGES, DEFAULT_OUT_DIR } from './lib/constants.ts';
 
 async function main(): Promise<void> {
   p.intro(color.bgCyan(color.black(' 🎬 AutoDemo ')));
@@ -89,8 +68,8 @@ async function main(): Promise<void> {
       outDir: () =>
         p.text({
           message: 'Output directory',
-          defaultValue: './out',
-          placeholder: './out',
+          defaultValue: DEFAULT_OUT_DIR,
+          placeholder: DEFAULT_OUT_DIR,
         }),
 
       confirm: ({ results }) => {

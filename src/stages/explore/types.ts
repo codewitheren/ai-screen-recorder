@@ -1,12 +1,3 @@
-// types.ts
-//
-// Shared type definitions and Zod schemas for the pipeline.
-//
-// Every cross-stage contract lives here so consumers can import a single
-// module. Schemas double as runtime validators for untrusted input
-// (LLM responses, persisted JSON) and as the source of truth for the
-// matching TypeScript types via `z.infer`.
-
 import { z } from 'zod';
 
 // --- Shared primitives ---
@@ -55,41 +46,28 @@ export const AgentTurnSchema = z.object({
 });
 export type AgentTurn = z.infer<typeof AgentTurnSchema>;
 
-// --- Record stage ---
+export type ExploreProgress =
+  | { type: 'turn-start'; turn: number; maxTurns: number }
+  | {
+      type: 'decision';
+      turn: number;
+      maxTurns: number;
+      thought: string;
+      narration: string;
+      action: {
+        kind: AgentTurn['action']['kind'];
+        selector?: string | null;
+        url?: string | null;
+        text?: string | null;
+        ms?: number | null;
+      };
+    }
+  | { type: 'action-ok'; turn: number }
+  | { type: 'action-error'; turn: number; error: string }
+  | { type: 'invalid-json'; turn: number; error: string }
+  | { type: 'step-recorded'; stepId: number; totalSoFar: number; maxTurns: number }
+  | { type: 'finished'; steps: number };
 
-export interface TimelineEntry {
-  readonly stepId: number;
-  readonly startMs: number;
-  readonly endMs: number;
-}
-
-export interface RecordResult {
-  readonly videoPath: string;
-  readonly timeline: readonly TimelineEntry[];
-}
-
-// --- TTS / Compose stages ---
-
-export interface AudioClip {
-  readonly stepId: number;
-  readonly durationMs: number;
-  readonly audioPath: string;
-}
-
-/**
- * An `AudioClip` enriched with its video-aligned start offset, used by
- * the compose stage to delay each clip into the right ffmpeg slot.
- */
-export interface AudioSegment extends AudioClip {
-  readonly startMs: number;
-}
-
-// --- Pipeline ---
-
-export interface RunContext {
-  readonly prompt: string;
-  readonly url: string;
-  readonly voice: string;
-  readonly language: string;
-  readonly outDir: string;
+export interface ExploreOptions {
+  onProgress?: (event: ExploreProgress) => void;
 }

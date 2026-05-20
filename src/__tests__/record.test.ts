@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
-import type { ExploreResult, VerifiedStep } from '../types.js';
+import type { ExploreResult, VerifiedStep } from '../stages/index.ts';
 
 // --- Playwright mock --------------------------------------------------------
 
@@ -62,7 +62,7 @@ vi.mock('playwright', () => ({
 }));
 
 import { chromium } from 'playwright';
-import { record } from '../stages/record.js';
+import { record } from '../stages/index.ts';
 
 beforeEach(() => {
   vi.clearAllMocks();

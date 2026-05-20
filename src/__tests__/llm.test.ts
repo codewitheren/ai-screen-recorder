@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { extractJson } from '../lib/llm.js';
+import { extractJson } from '../lib/llm.ts';
 
-vi.mock('../lib/openai-client.js', () => {
+vi.mock('../lib/openai-client.ts', () => {
   const mockCreate = vi.fn();
   return {
     getOpenAIClient: () => ({
@@ -59,7 +59,7 @@ describe('chat', () => {
 
   beforeEach(async () => {
     const mod: { __mockCreate: ReturnType<typeof vi.fn> } =
-      (await import('../lib/openai-client.js')) as never;
+      (await import('../lib/openai-client.ts')) as never;
     mockCreate = mod.__mockCreate;
     mockCreate.mockReset();
   });
@@ -69,7 +69,7 @@ describe('chat', () => {
       choices: [{ message: { content: null } }],
     });
 
-    const { chat } = await import('../lib/llm.js');
+    const { chat } = await import('../lib/llm.ts');
     await expect(
       chat({ system: 'test', messages: [{ role: 'user', content: 'hi' }] })
     ).rejects.toThrow('LLM returned no text content');
@@ -80,7 +80,7 @@ describe('chat', () => {
       choices: [{ message: { content: '{"result": true}' } }],
     });
 
-    const { chat } = await import('../lib/llm.js');
+    const { chat } = await import('../lib/llm.ts');
     const result = await chat({
       system: 'You are a helper',
       messages: [{ role: 'user', content: 'test' }],
