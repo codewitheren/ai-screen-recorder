@@ -1,8 +1,11 @@
 // types.ts
 //
 // Shared type definitions and Zod schemas for the pipeline.
-// All stage inputs/outputs are defined here to keep contracts explicit
-// and enable runtime validation of LLM responses.
+//
+// Every cross-stage contract lives here so consumers can import a single
+// module. Schemas double as runtime validators for untrusted input
+// (LLM responses, persisted JSON) and as the source of truth for the
+// matching TypeScript types via `z.infer`.
 
 import { z } from 'zod';
 
@@ -14,8 +17,8 @@ export type StepAction = z.infer<typeof StepActionSchema>;
 // --- Explore stage ---
 
 /**
- * A verified browser step. The selector is guaranteed to resolve
- * on the target page because it was tested during exploration.
+ * A browser step whose selector has been exercised successfully during
+ * exploration, so the record stage can replay it deterministically.
  */
 export const VerifiedStepSchema = z.object({
   id: z.number().int().positive(),
@@ -33,8 +36,11 @@ export const ExploreResultSchema = z.object({
 export type ExploreResult = z.infer<typeof ExploreResultSchema>;
 
 /**
- * LLM response shape for a single agent turn.
- * Validated at runtime because LLM output is untrusted.
+ * One decision from the explore agent.
+ *
+ * Validated at runtime because LLM output is untrusted: models occasionally
+ * omit fields or invent action kinds. `thought` and `narration` default to
+ * empty so a model that emits only `action` still parses.
  */
 export const AgentTurnSchema = z.object({
   thought: z.string().default(''),
@@ -70,7 +76,10 @@ export interface AudioClip {
   readonly audioPath: string;
 }
 
-// AudioSegment adds a video-aligned start time for ffmpeg composition.
+/**
+ * An `AudioClip` enriched with its video-aligned start offset, used by
+ * the compose stage to delay each clip into the right ffmpeg slot.
+ */
 export interface AudioSegment extends AudioClip {
   readonly startMs: number;
 }
@@ -83,5 +92,4 @@ export interface RunContext {
   readonly voice: string;
   readonly language: string;
   readonly outDir: string;
-  readonly testMode?: boolean;
 }

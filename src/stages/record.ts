@@ -1,8 +1,9 @@
 // record.ts
 //
-// Replays verified steps in a fresh browser with Playwright video capture.
-// Each step is held on-screen long enough for its narration audio to finish.
-// No AI calls here — purely deterministic playback.
+// Replays the verified steps in a fresh browser with Playwright video
+// capture. Each step is held on-screen long enough for its narration
+// audio to finish, so the recording can later be muxed with the TTS
+// clips without timing drift. No AI calls happen here.
 
 import { chromium, type Page } from 'playwright';
 import path from 'node:path';
@@ -10,12 +11,17 @@ import fs from 'node:fs/promises';
 import type { ExploreResult, RecordResult, TimelineEntry, VerifiedStep } from '../types.js';
 
 const ACTION_TIMEOUT_MS = 8000;
-// Extra padding after each step so narration doesn't clip into the next action.
+// Trailing pad after each step. Keeps narration from clipping into the
+// next action when audio durations are close to step durations.
 const POST_STEP_GAP_MS = 400;
 
 /**
- * Replays steps with video recording. Returns the video path and a
- * timeline mapping each step to its start/end offset in the recording.
+ * Replays `plan.steps` with video recording.
+ *
+ * Side effects: launches a headless browser, writes the raw .webm to
+ * `outDir/video/` and `timeline.json` to `outDir`. Returns the video path
+ * plus a timeline that maps each step to its [startMs, endMs] in the
+ * recording — the compose stage needs this to delay audio clips.
  */
 export async function record(
   plan: ExploreResult,
@@ -31,8 +37,8 @@ export async function record(
     viewport: { width: 1920, height: 1080 },
     recordVideo: { dir: videoDir, size: { width: 1920, height: 1080 } },
   });
-  // Playwright's video capture doesn't include the real OS cursor, so we
-  // inject a virtual cursor overlay that follows mouse events on every page.
+  // Playwright's recorder doesn't capture the OS cursor, so we inject a
+  // virtual cursor overlay that follows mouse events on every page.
   await context.addInitScript({ content: VIRTUAL_CURSOR_SCRIPT });
   const page = await context.newPage();
 
@@ -44,7 +50,8 @@ export async function record(
       const startMs = Date.now() - t0;
       await runStep(page, step, startUrl);
 
-      // Hold until narration finishes playing so audio stays in sync.
+      // Hold the frame until narration finishes, otherwise the next
+      // action would start before the viewer hears about this one.
       const audioMs = audioDurations.get(step.id) ?? 0;
       const elapsed = Date.now() - t0 - startMs;
       const holdMs = Math.max(POST_STEP_GAP_MS, audioMs + POST_STEP_GAP_MS - elapsed);
@@ -66,8 +73,9 @@ export async function record(
   return { videoPath, timeline };
 }
 
-// Executes a single verified step. If a selector fails here, it means
-// the page state drifted between exploration and recording.
+// Executes a single verified step. A selector failure here means the page
+// drifted between exploration and recording (e.g. A/B test, new layout)
+// — we surface it rather than retrying because the plan is stale.
 async function runStep(page: Page, step: VerifiedStep, fallbackUrl: string): Promise<void> {
   switch (step.action) {
     case 'navigate': {
@@ -101,9 +109,9 @@ async function runStep(page: Page, step: VerifiedStep, fallbackUrl: string): Pro
   }
 }
 
-// Smoothly moves the real Playwright mouse to the element's center. This
-// drives the injected virtual cursor (via mousemove events) so viewers see
-// the pointer travel toward each interaction.
+// Animates the real Playwright pointer to the element's center. The
+// motion drives the injected virtual cursor (via mousemove events) so
+// viewers see the pointer travel toward each interaction.
 async function moveCursorTo(page: Page, locator: ReturnType<Page['locator']>): Promise<void> {
   const box = await locator.boundingBox();
   if (!box) return;
@@ -112,9 +120,9 @@ async function moveCursorTo(page: Page, locator: ReturnType<Page['locator']>): P
   await page.mouse.move(x, y, { steps: 20 });
 }
 
-// Browser-side script injected into every page. Renders a cursor div and
-// updates its position on mousemove. Kept as a string so this Node module
-// doesn't need DOM types in tsconfig.
+// Browser-side script injected into every page. Renders a cursor element
+// and tracks the mouse via `mousemove`. Kept as a raw string so this
+// Node-only module doesn't need the DOM lib in tsconfig.
 const VIRTUAL_CURSOR_SCRIPT = `
 (() => {
   const install = () => {

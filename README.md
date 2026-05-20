@@ -14,7 +14,7 @@ The video below was generated with a single command (`pnpm dev`) using these inp
 
 | Prompt   | "Wikipedia'da örnek bir arama nasıl yapılır?" |
 | -------- | --------------------------------------------- |
-| URL      | https://wikipedia.org/                        |
+| URL      | <https://wikipedia.org/>                      |
 | Language | Turkish                                       |
 | Voice    | Nova (friendly, upbeat)                       |
 
@@ -34,7 +34,6 @@ An AI-powered CLI tool that turns a plain-text task description into a fully nar
 - **Verified automation** — The AI agent validates every selector in a live browser before recording, eliminating flaky playback
 - **Production-quality output** — 1080p, 30 fps, loudness-normalized MP4 with synced narration
 - **Interactive CLI** — Guided prompts with confirmation before execution
-- **Test mode** — Run the full pipeline without spending AI credits (uses mock exploration and silent audio)
 
 ## How It Works
 
@@ -96,8 +95,7 @@ The CLI will guide you through:
 3. **Language** — Narration language
 4. **Voice** — TTS voice selection
 5. **Output directory** — Where to save the result
-6. **Test mode** — Skip AI calls for pipeline testing (no credits used)
-7. **Confirm** — Review and start
+6. **Confirm** — Review and start
 
 Output is saved to `./out/<timestamp>/final.mp4` by default.
 
@@ -122,9 +120,6 @@ $ pnpm dev
 │
 ◆  Output directory
 │  ./out
-│
-◇  Enable test mode? (no AI credits used)
-│  No
 │
 ◇  Run Show how to create a new repository on GitHub on https://github.com?
 │  Yes
@@ -165,11 +160,16 @@ Environment variables (set in `.env`):
 
 ## Scripts
 
-| Command          | Description                   |
-| ---------------- | ----------------------------- |
-| `pnpm dev`       | Run in development mode (tsx) |
-| `pnpm build`     | Compile TypeScript to `dist/` |
-| `pnpm start`     | Run compiled CLI              |
-| `pnpm typecheck` | Type-check without emitting   |
-| `pnpm lint`      | Run ESLint                    |
-| `pnpm lint:fix`  | Auto-fix lint issues          |
+| Command             | Description                       |
+| ------------------- | --------------------------------- |
+| `pnpm dev`          | Run in development mode (tsx)     |
+| `pnpm build`        | Compile TypeScript to `dist/`     |
+| `pnpm start`        | Run compiled CLI                  |
+| `pnpm test`         | Run the unit test suite (Vitest)  |
+| `pnpm test:watch`   | Run tests in watch mode           |
+| `pnpm typecheck`    | Type-check without emitting       |
+| `pnpm lint`         | Run ESLint                        |
+| `pnpm lint:fix`     | Auto-fix lint issues              |
+| `pnpm format`       | Format sources with Prettier      |
+| `pnpm format:check` | Verify formatting without writing |
+| `pnpm check`        | Typecheck + lint + format check   |

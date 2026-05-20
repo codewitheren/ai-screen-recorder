@@ -8,3 +8,4 @@ out/
 .playwright/
 playwright-report/
 .agents/
+tsconfig.tsbuildinfo

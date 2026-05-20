@@ -1,8 +1,14 @@
 // explore.ts
 //
-// AI agent that browses the target site turn-by-turn in a headless browser.
-// Each turn: LLM decides an action → we execute it → feed back the new page state.
-// Produces verified steps (selectors known to work) with narration text.
+// LLM-driven browser agent. Drives a headless Chromium one turn at a time:
+// the model proposes a single action, we execute it, then feed the new
+// page state back into the next prompt. The result is a list of
+// `VerifiedStep`s whose selectors are known-good because they already
+// resolved against the live page.
+//
+// Self-correction: on a tool error we re-prompt with `ERROR:` and a
+// fresh snapshot, giving the model a chance to pick a different selector
+// before we give up. See `consecutiveErrors` for the failure budget.
 
 import { chromium, type Page } from 'playwright';
 import path from 'node:path';
@@ -12,9 +18,8 @@ import type { ChatMessage } from '../lib/llm.js';
 import { AgentTurnSchema } from '../types.js';
 import type { AgentTurn, ExploreResult, VerifiedStep } from '../types.js';
 
-const MAX_TURNS = 25;
+const MAX_TURNS = Math.max(1, parseInt(process.env.EXPLORE_MAX_TURNS ?? '15', 10) || 15);
 const ACTION_TIMEOUT_MS = 7000;
-// Aria snapshot is capped to fit within LLM context window.
 const SNAPSHOT_CHARS = 6000;
 
 function buildSystem(language: string): string {
@@ -60,8 +65,11 @@ JSON shape:
 }
 
 /**
- * Runs the explore agent loop. Returns verified steps with narration.
- * Throws if the agent fails repeatedly or produces zero steps.
+ * Runs the agent loop until it emits `finish`, fails too many times in
+ * a row, or hits `MAX_TURNS`.
+ *
+ * Side effects: launches a headless browser, writes `explore.json` to
+ * `outDir`. Throws if the agent never produces a usable step.
  */
 export async function explore(
   prompt: string,
@@ -79,7 +87,8 @@ export async function explore(
   let stepId = 1;
   let title = prompt;
 
-  // Seed the conversation with the user's goal.
+  // Seed the conversation with the goal and the start URL. The model's
+  // first action should normally be `navigate`.
   history.push({
     role: 'user',
     content:
@@ -96,7 +105,8 @@ export async function explore(
       const raw = await chat({ system: SYSTEM, messages: history });
       history.push({ role: 'assistant', content: raw });
 
-      // Parse and validate the agent's JSON response.
+      // Parse and validate the model's JSON. Schema failures count toward
+      // the consecutive-error budget so a stuck model eventually aborts.
       let decision: AgentTurn;
       try {
         decision = AgentTurnSchema.parse(JSON.parse(extractJson(raw)));
@@ -120,7 +130,7 @@ export async function explore(
         break;
       }
 
-      // Execute the action in the live browser.
+      // Execute the proposed action in the live browser.
       const result = await tryAction(page, decision);
       if (!result.ok) {
         consecutiveErrors++;
@@ -139,7 +149,7 @@ export async function explore(
 
       consecutiveErrors = 0;
 
-      // Commit the verified step and feed the new page state to the agent.
+      // Action succeeded: persist it as a verified step and continue.
       const stored = toVerifiedStep(stepId++, decision);
       if (stored) steps.push(stored);
 
@@ -167,8 +177,8 @@ export async function explore(
 
 type ActionResult = { ok: true } | { ok: false; error: string };
 
-// Converts an agent turn to a VerifiedStep. Returns null for turns
-// without narration (skipped actions) or the terminal 'finish' action.
+// Maps an `AgentTurn` to a recordable step. Returns null for turns we
+// shouldn't replay later (no narration, or the terminal `finish`).
 function toVerifiedStep(id: number, t: AgentTurn): VerifiedStep | null {
   const narration = t.narration.trim();
   if (!narration) return null;
@@ -203,8 +213,8 @@ function toVerifiedStep(id: number, t: AgentTurn): VerifiedStep | null {
   }
 }
 
-// Executes one browser action. Returns the error message on failure
-// so the agent can self-correct on the next turn.
+// Executes one browser action. On failure, returns the error message so
+// the agent can read it on the next turn and try a different approach.
 async function tryAction(page: Page, t: AgentTurn): Promise<ActionResult> {
   const a = t.action;
   try {
@@ -244,7 +254,8 @@ async function tryAction(page: Page, t: AgentTurn): Promise<ActionResult> {
   }
 }
 
-// Compact page representation for the LLM: URL, title, and aria tree.
+// Compact page summary for the prompt: URL, title, and accessibility tree.
+// Truncated to `SNAPSHOT_CHARS` to keep token usage bounded on big pages.
 async function snapshot(page: Page): Promise<string> {
   const url = page.url();
   let title = '';
